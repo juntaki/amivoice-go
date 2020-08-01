@@ -24,16 +24,16 @@ type InterpretRequest struct {
 	Data             []byte
 }
 
-func (c *Conn) Interpret(i *InterpretRequest) string {
+func (c *Conn) Interpret(i *InterpretRequest) (string, error) {
 	err := c.SendCommandSet(i)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	res, err := c.WaitCommandSetEnd()
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return res
+	return res, nil
 }
 
 func (c *Conn) WaitCommandSetEnd() (string, error) {

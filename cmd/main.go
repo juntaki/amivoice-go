@@ -6,13 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/signal"
 )
 
 func main() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
 	token := os.Getenv("ACP_TOKEN")
 	c, err := amivoice.NewConnection(token)
 	defer c.Close()
