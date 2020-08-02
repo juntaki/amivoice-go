@@ -3,7 +3,7 @@ package amivoice
 const (
 	httpLogURL   = "https://acp-api.amivoice.com/v1/recognize"
 	httpNoLogURL = "https://acp-api.amivoice.com/v1/nolog/recognize"
-	WssLogURL    = "wss://acp-api.amivoice.com/v1/"
+	wssLogURL    = "wss://acp-api.amivoice.com/v1/"
 	wssNoLogURL  = "wss://acp-api.amivoice.com/v1/nolog/"
 )
 

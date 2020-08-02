@@ -164,7 +164,7 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 }
 
 func NewConnection(token string) (*Conn, error) {
-	c, _, err := websocket.DefaultDialer.Dial(WssLogURL, nil)
+	c, _, err := websocket.DefaultDialer.Dial(wssLogURL, nil)
 	if err != nil {
 		return nil, err
 	}
