@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
+	"fyne.io/fyne"
+	"fyne.io/fyne/app"
+	"fyne.io/fyne/theme"
+	"fyne.io/fyne/widget"
+	"github.com/gordonklaus/portaudio"
+	"github.com/juntaki/amivoice-go"
 	"io"
 	"os"
 	"os/signal"
-
-	"github.com/gordonklaus/portaudio"
-	"github.com/juntaki/amivoice-go"
 )
 
 func main() {
@@ -64,24 +66,40 @@ func main() {
 
 	go c.CollectResult(final, progress, nil)
 
+	go c.Recognize(&amivoice.RecognitionConfig{
+		AudioFormat:      amivoice.AudioFormatLSB16k,
+		GrammarFileNames: amivoice.GammarFileGeneral,
+		Data:             pr,
+	})
+
+	finalText := ""
+	currentText := ""
+
+	app := app.New()
+	app.Settings().SetTheme(myTheme{theme.DarkTheme()})
+
+	w := app.NewWindow("Caption")
+	w.Resize(fyne.Size{Width: 600, Height: 70})
+	wd := widget.NewLabel(currentText)
+	wd.Wrapping = fyne.TextWrapBreak
+	sc := widget.NewVScrollContainer(wd)
+
 	// Read result loop
 	go func() {
 		for {
 			select {
 			case val := <-final:
-				fmt.Println(val.Text)
+				finalText += val.Text
+				currentText = finalText
 			case val := <-progress:
-				fmt.Println(val.Text)
+				currentText = finalText + val.Text
 			}
+			wd.Text = currentText
+			sc.Offset = fyne.NewPos(0, wd.Size().Height)
+			wd.Refresh()
+			sc.Refresh()
 		}
 	}()
-
-	err = c.Recognize(&amivoice.RecognitionConfig{
-		AudioFormat:      amivoice.AudioFormatLSB16k,
-		GrammarFileNames: amivoice.GammarFileGeneral,
-		Data:             pr,
-	})
-	if err != nil {
-		panic(err)
-	}
+	w.SetContent(sc)
+	w.ShowAndRun()
 }
