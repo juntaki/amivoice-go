@@ -31,3 +31,7 @@ type AEvent struct {
 	Code        string `json:"code"`
 	Message     string `json:"message"`
 }
+
+func (a *AEvent) IsSuccess() bool {
+	return a.Code == "" && a.Message == "" && a.Text != ""
+}

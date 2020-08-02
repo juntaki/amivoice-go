@@ -21,44 +21,19 @@ const (
 	GammarFileMeeting                  = "-a-meeting"
 )
 
-type CodecType string
+type AudioFormat string
 
 const (
-	CodecLSB8k  CodecType = "lsb8k"
-	CodecMSB8k            = "msb8k"
-	CodecLSB11k           = "lsb11k"
-	CodecMSB11k           = "msb11k"
-	CodecLSB16k           = "lsb16k"
-	CodecMSB16k           = "msb16k"
-	CodecLSB22k           = "lsb22k"
-	CodecMSB22k           = "msb22k"
-	CodecMuLaw            = "mulaw"
-	CodecALaw             = "alaw"
-	Codec8k               = "8k"
-	Codec16k              = "16k"
+	AudioFormatLSB8k  AudioFormat = "lsb8k"
+	AudioFormatMSB8k              = "msb8k"
+	AudioFormatLSB11k             = "lsb11k"
+	AudioFormatMSB11k             = "msb11k"
+	AudioFormatLSB16k             = "lsb16k"
+	AudioFormatMSB16k             = "msb16k"
+	AudioFormatLSB22k             = "lsb22k"
+	AudioFormatMSB22k             = "msb22k"
+	AudioFormatMuLaw              = "mulaw"
+	AudioFormatALaw               = "alaw"
+	AudioFormat8k                 = "8k"
+	AudioFormat16k                = "16k"
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

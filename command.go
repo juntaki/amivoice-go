@@ -22,10 +22,8 @@ func (e *eCommand) Command() []byte {
 	return []byte("e")
 }
 
-// https://acp.amivoice.com/main/manual/s%e3%82%b3%e3%83%9e%e3%83%b3%e3%83%89%e3%83%91%e3%82%b1%e3%83%83%e3%83%88%ef%bc%8fs-%e3%82%b3%e3%83%9e%e3%83%b3%e3%83%89%e5%bf%9c%e7%ad%94%e3%83%91%e3%82%b1%e3%83%83%e3%83%88/
-// S command packet
 type sCommand struct {
-	AudioFormat      CodecType
+	AudioFormat      AudioFormat
 	GrammarFileNames GrammarFile
 	Authorization    string
 	ProfileID        string
