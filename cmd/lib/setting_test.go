@@ -13,7 +13,7 @@ func TestConfig(t *testing.T) {
 		AudioFormat:      amivoice.AudioFormat16k,
 		GrammarFileNames: amivoice.GammarFileGeneral,
 		ProfileID:        "profile",
-		ProfileWords:     []ProfileWord{
+		ProfileWords: []ProfileWord{
 			{
 				Notation: "aaa",
 				Sound:    "あああ",

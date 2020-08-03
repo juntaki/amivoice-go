@@ -76,7 +76,7 @@ func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *
 				continue
 			}
 			ret := UEvent{}
-			err := json.Unmarshal(message[2:len(message)], &ret)
+			err := json.Unmarshal(message[2:], &ret)
 			if err != nil {
 				return err
 			}
@@ -86,7 +86,7 @@ func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *
 				continue
 			}
 			ret := AEvent{}
-			err := json.Unmarshal(message[2:len(message)], &ret)
+			err := json.Unmarshal(message[2:], &ret)
 			if err != nil {
 				return err
 			}
