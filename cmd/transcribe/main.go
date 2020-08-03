@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/juntaki/amivoice-go/cmd/lib"
 	"os"
 
 	"github.com/juntaki/amivoice-go"
@@ -14,12 +15,13 @@ func main() {
 		fmt.Println("invalid args")
 		return
 	}
-	token := os.Getenv("ACP_TOKEN")
-	if token == "" {
-		fmt.Println("set ACP_TOKEN")
-		return
+
+	setting, err := lib.ReadSetting()
+	if err != nil {
+		panic(err)
 	}
-	c, err := amivoice.NewConnection(token, true)
+
+	c, err := amivoice.NewConnection(setting.AppKey, true)
 	defer c.Close()
 
 	f, err := os.Open(flag.Arg(0))
@@ -28,12 +30,7 @@ func main() {
 	}
 	defer f.Close()
 
-	s := &amivoice.RecognitionConfig{
-		AudioFormat:      amivoice.AudioFormat16k,
-		GrammarFileNames: amivoice.GammarFileGeneral,
-		Data:             f,
-	}
-	result, err := c.Transcribe(s)
+	result, err := c.Transcribe(setting.GenerateRecognitionConfig(f))
 	if err != nil {
 		panic(err)
 	}

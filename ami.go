@@ -11,7 +11,7 @@ import (
 
 type Conn struct {
 	Conn     *websocket.Conn
-	Token    string
+	AppKey   string
 	IsClosed bool
 }
 
@@ -130,7 +130,7 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 	s := &sCommand{
 		AudioFormat:      i.AudioFormat,
 		GrammarFileNames: i.GrammarFileNames,
-		Authorization:    c.Token,
+		Authorization:    c.AppKey,
 		ProfileID:        i.ProfileID,
 		ProfileWords:     i.ProfileWords,
 	}
@@ -163,7 +163,7 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 	return nil
 }
 
-func NewConnection(token string, disableLogging bool) (*Conn, error) {
+func NewConnection(appKey string, disableLogging bool) (*Conn, error) {
 	url := wssLogURL
 	if disableLogging {
 		url = wssNoLogURL
@@ -172,5 +172,5 @@ func NewConnection(token string, disableLogging bool) (*Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Conn{Conn: c, Token: token, IsClosed: false}, nil
+	return &Conn{Conn: c, AppKey: appKey, IsClosed: false}, nil
 }

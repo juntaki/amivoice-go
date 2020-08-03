@@ -1,0 +1,7 @@
+app_key: <APP_KEY>
+audio_format: 16k
+grammar_file: -a-general
+#profile_id: <profile_id>
+#profile_words:
+#  - notation: Go
+#    sound: ごー

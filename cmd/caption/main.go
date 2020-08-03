@@ -8,12 +8,18 @@ import (
 	"fyne.io/fyne/widget"
 	"github.com/gordonklaus/portaudio"
 	"github.com/juntaki/amivoice-go"
+	"github.com/juntaki/amivoice-go/cmd/lib"
 	"io"
 	"os"
 	"os/signal"
 )
 
 func main() {
+	setting, err := lib.ReadSetting()
+	if err != nil {
+		panic(err)
+	}
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, os.Kill)
 
@@ -54,8 +60,7 @@ func main() {
 	}()
 
 	// Initialize amivoice
-	token := os.Getenv("ACP_TOKEN")
-	c, err := amivoice.NewConnection(token, true)
+	c, err := amivoice.NewConnection(setting.AppKey, true)
 	if err != nil {
 		return
 	}
@@ -66,11 +71,7 @@ func main() {
 
 	go c.CollectResult(final, progress, nil)
 
-	go c.Recognize(&amivoice.RecognitionConfig{
-		AudioFormat:      amivoice.AudioFormatLSB16k,
-		GrammarFileNames: amivoice.GammarFileGeneral,
-		Data:             pr,
-	})
+	go c.Recognize(setting.GenerateRecognitionConfig(pr))
 
 	finalText := ""
 	currentText := ""
