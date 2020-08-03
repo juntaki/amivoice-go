@@ -22,6 +22,9 @@ func main() {
 	}
 
 	c, err := amivoice.NewConnection(setting.AppKey, true)
+	if err != nil {
+		panic(err)
+	}
 	defer c.Close()
 
 	f, err := os.Open(flag.Arg(0))
