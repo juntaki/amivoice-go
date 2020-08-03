@@ -1,7 +1,7 @@
 # amivoice-go
 
 [![PkgGoDev](https://pkg.go.dev/badge/juntaki/amivoice-go/)](https://pkg.go.dev/juntaki/amivoice-go/)
-![goreport](https://goreportcard.com/badge/github.com/juntaki/amivoice-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/juntaki/amivoice-go)](https://goreportcard.com/report/github.com/juntaki/amivoice-go)
 
 [AmiVoice Cloud Platform](https://acp.amivoice.com/main/)のGoライブラリです
 
