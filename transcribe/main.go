@@ -19,10 +19,10 @@ func main() {
 		fmt.Println("set ACP_TOKEN")
 		return
 	}
-	c, err := amivoice.NewConnection(token)
+	c, err := amivoice.NewConnection(token, true)
 	defer c.Close()
 
-	f, err := os.Open("./test.wav")
+	f, err := os.Open(flag.Arg(0))
 	if err != nil {
 		panic(err)
 	}

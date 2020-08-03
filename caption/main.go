@@ -55,7 +55,7 @@ func main() {
 
 	// Initialize amivoice
 	token := os.Getenv("ACP_TOKEN")
-	c, err := amivoice.NewConnection(token)
+	c, err := amivoice.NewConnection(token, true)
 	if err != nil {
 		return
 	}

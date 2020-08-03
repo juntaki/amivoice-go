@@ -146,7 +146,7 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 		if _, err = w.Write([]byte("p")); err != nil {
 			return err
 		}
-		_, err = io.CopyN(w, i.Data, 64)
+		_, err = io.CopyN(w, i.Data, 2024)
 		if err == io.EOF {
 			s := &eCommand{}
 			err = c.Conn.WriteMessage(websocket.TextMessage, s.Command())
@@ -163,8 +163,12 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 	return nil
 }
 
-func NewConnection(token string) (*Conn, error) {
-	c, _, err := websocket.DefaultDialer.Dial(wssLogURL, nil)
+func NewConnection(token string, disableLogging bool) (*Conn, error) {
+	url := wssLogURL
+	if disableLogging {
+		url = wssNoLogURL
+	}
+	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, err
 	}
