@@ -55,22 +55,17 @@ func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *
 		}
 		switch message[0] {
 		case 's':
-			if len(message) > 1 {
-				return errors.New(string(message))
-			}
-			if notification != nil {
-				notification <- string(message)
-			}
-		case 'p':
-			return errors.New(string(message))
+			fallthrough
 		case 'e':
-			if len(message) > 1 {
-				return errors.New(string(message))
-			}
 			if notification != nil {
 				notification <- string(message)
+			}
+			if len(message) > 1 {
+				return errors.New(string(message))
 			}
 			return nil
+		case 'p':
+			return errors.New(string(message))
 		case 'U':
 			if progressResult == nil {
 				continue
@@ -96,10 +91,9 @@ func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *
 		case 'E':
 			fallthrough
 		case 'C':
-			if notification == nil {
-				continue
+			if notification != nil {
+				notification <- string(message)
 			}
-			notification <- string(message)
 		case 'G':
 			// ignore
 		default:
