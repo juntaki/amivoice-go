@@ -146,7 +146,7 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 		if _, err = w.Write([]byte("p")); err != nil {
 			return err
 		}
-		_, err = io.CopyN(w, i.Data, 2024)
+		_, err = io.CopyN(w, i.Data, 2048) // packet must be bigger than riff header?
 		if err == io.EOF {
 			s := &eCommand{}
 			err = c.Conn.WriteMessage(websocket.TextMessage, s.Command())
