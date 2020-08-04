@@ -42,63 +42,81 @@ func (c *Conn) Transcribe(i *RecognitionConfig) (string, error) {
 
 func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *UEvent, notification chan<- string) error {
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		err := c.CollectOneResult(fixedResult, progressResult, notification)
+		if err == ErrEResponseReceived || err == ErrConnClosed {
+			return nil
+		}
 		if err != nil {
-			if c.IsClosed {
-				break
-			}
 			return err
 		}
+	}
+}
 
-		if len(message) == 0 {
-			return errors.New("invalid message")
+var (
+	ErrConnClosed        = errors.New("read from closed connection")
+	ErrEResponseReceived = errors.New("e response received")
+)
+
+func (c *Conn) CollectOneResult(fixedResult chan<- *AEvent, progressResult chan<- *UEvent, notification chan<- string) error {
+	_, message, err := c.Conn.ReadMessage()
+	if err != nil {
+		if c.IsClosed {
+			return ErrConnClosed
 		}
-		switch message[0] {
-		case 's':
-			fallthrough
-		case 'e':
-			if notification != nil {
-				notification <- string(message)
-			}
-			if len(message) > 1 {
-				return errors.New(string(message))
-			}
-			return nil
-		case 'p':
+		return err
+	}
+
+	if len(message) == 0 {
+		return errors.New("invalid message")
+	}
+	switch message[0] {
+	case 's':
+		if notification != nil {
+			notification <- string(message)
+		}
+		if len(message) > 1 {
 			return errors.New(string(message))
-		case 'U':
-			if progressResult == nil {
-				continue
-			}
-			ret := UEvent{}
-			err := json.Unmarshal(message[2:], &ret)
-			if err != nil {
-				return err
-			}
+		}
+	case 'e':
+		if notification != nil {
+			notification <- string(message)
+		}
+		if len(message) > 1 {
+			return errors.New(string(message))
+		}
+		return ErrEResponseReceived
+	case 'p':
+		return errors.New(string(message))
+	case 'U':
+		ret := UEvent{}
+		err := json.Unmarshal(message[2:], &ret)
+		if err != nil {
+			return err
+		}
+		if progressResult != nil {
 			progressResult <- &ret
-		case 'A':
-			if fixedResult == nil {
-				continue
-			}
-			ret := AEvent{}
-			err := json.Unmarshal(message[2:], &ret)
-			if err != nil {
-				return err
-			}
-			fixedResult <- &ret
-		case 'S':
-			fallthrough
-		case 'E':
-			fallthrough
-		case 'C':
-			if notification != nil {
-				notification <- string(message)
-			}
-		case 'G':
-			// ignore
-		default:
-			return errors.New(string(message))
 		}
+	case 'A':
+		ret := AEvent{}
+		err := json.Unmarshal(message[2:], &ret)
+		if err != nil {
+			return err
+		}
+		if fixedResult != nil {
+			fixedResult <- &ret
+		}
+	case 'S':
+		fallthrough
+	case 'E':
+		fallthrough
+	case 'C':
+		if notification != nil {
+			notification <- string(message)
+		}
+	case 'G':
+		// ignore
+	default:
+		return errors.New(string(message))
 	}
 	return nil
 }
@@ -142,8 +160,8 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 		}
 		_, err = io.CopyN(w, i.Data, 2048) // packet must be bigger than riff header?
 		if err == io.EOF {
-			s := &eCommand{}
-			err = c.Conn.WriteMessage(websocket.TextMessage, s.Command())
+			e := &eCommand{}
+			err = c.Conn.WriteMessage(websocket.TextMessage, e.Command())
 			if err != nil {
 				return err
 			}
