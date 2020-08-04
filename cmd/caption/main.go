@@ -60,7 +60,7 @@ func main() {
 	}()
 
 	// Initialize amivoice
-	c, err := amivoice.NewConnection(setting.AppKey, true)
+	c, err := amivoice.NewConnection(setting.AppKey, setting.NoLog)
 	if err != nil {
 		return
 	}

@@ -23,6 +23,7 @@ func TestConfig(t *testing.T) {
 				Sound:    "いいい",
 			},
 		},
+		NoLog: true,
 	}
 	e := yaml.NewEncoder(os.Stdout)
 	e.Encode(r)

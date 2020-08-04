@@ -157,9 +157,9 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 	return nil
 }
 
-func NewConnection(appKey string, disableLogging bool) (*Conn, error) {
+func NewConnection(appKey string, noLog bool) (*Conn, error) {
 	url := wssLogURL
-	if disableLogging {
+	if noLog {
 		url = wssNoLogURL
 	}
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)

@@ -13,6 +13,7 @@ type RecognitionSetting struct {
 	GrammarFileNames amivoice.GrammarFile `yaml:"grammar_file"`
 	ProfileID        string               `yaml:"profile_id,omitempty"`
 	ProfileWords     []ProfileWord        `yaml:"profile_words,omitempty"`
+	NoLog            bool                 `yaml:"no_log,omitempty"`
 }
 
 type ProfileWord struct {
