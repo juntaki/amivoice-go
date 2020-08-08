@@ -33,9 +33,8 @@ func main() {
 	}
 	defer f.Close()
 
-	result, err := c.Transcribe(setting.GenerateRecognitionConfig(f))
+	err = c.Transcribe(setting.GenerateRecognitionConfig(f), os.Stdout)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(result)
 }

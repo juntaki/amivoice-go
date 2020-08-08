@@ -28,16 +28,16 @@ type RecognitionConfig struct {
 	Data             io.Reader
 }
 
-func (c *Conn) Transcribe(i *RecognitionConfig) (string, error) {
+func (c *Conn) Transcribe(i *RecognitionConfig, w io.Writer) error {
 	err := c.Recognize(i)
 	if err != nil {
-		return "", err
+		return err
 	}
-	res, err := c.CollectFinalResult()
+	err = c.CollectFinalResult(w)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return res, nil
+	return nil
 }
 
 func (c *Conn) CollectResult(fixedResult chan<- *AEvent, progressResult chan<- *UEvent, notification chan<- string) error {
@@ -121,21 +121,21 @@ func (c *Conn) CollectOneResult(fixedResult chan<- *AEvent, progressResult chan<
 	return nil
 }
 
-func (c *Conn) CollectFinalResult() (string, error) {
+func (c *Conn) CollectFinalResult(w io.Writer) error {
 	final := make(chan *AEvent)
-	var result string
 	go func() {
 		for f := range final {
-			result += f.Text
+			w.Write([]byte(f.Text))
 		}
 	}()
 
 	err := c.CollectResult(final, nil, nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 	runtime.Gosched()
-	return result, nil
+	close(final)
+	return nil
 }
 
 func (c *Conn) Recognize(i *RecognitionConfig) error {
