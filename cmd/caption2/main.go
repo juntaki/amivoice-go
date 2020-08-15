@@ -158,8 +158,8 @@ func main() {
 	win.SetResizable(true)
 	win.SetAppPaintable(true)
 
-	finalText := "Caption->"
-	currentText := "Caption->"
+	finalText := ">"
+	currentText := ">"
 
 	cap := NewCaption()
 	tick := time.NewTicker(300 * time.Millisecond)
