@@ -6,9 +6,9 @@ import (
 	"github.com/gordonklaus/portaudio"
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
-	"github.com/gotk3/gotk3/pango"
 	"github.com/juntaki/amivoice-go"
 	"github.com/juntaki/amivoice-go/cmd/lib"
+	"html"
 	"io"
 	"log"
 	"os"
@@ -17,8 +17,8 @@ import (
 )
 
 type Caption struct {
-	f  *gtk.Fixed
-	bg []*gtk.Label
+	widget gtk.IWidget
+	labels []*gtk.Label
 }
 
 func NewCaption() *Caption {
@@ -33,12 +33,8 @@ func NewCaption() *Caption {
 		if err != nil {
 			log.Fatal("Unable to create label:", err)
 		}
-	}
-	for _, b := range bg {
-		b.SetWidthChars(200)
-		b.SetEllipsize(pango.ELLIPSIZE_START)
-		b.SetXAlign(0)
-		b.SetYAlign(0)
+		bg[i].SetXAlign(0)
+		bg[i].SetYAlign(0)
 	}
 	line := 3
 	m := [][]int{
@@ -55,14 +51,28 @@ func NewCaption() *Caption {
 		f.Put(bg[i+1], m[i][0]*line, m[i][1]*line)
 	}
 	f.Put(bg[0], 0, 0)
-	return &Caption{f: f, bg: bg}
+	return &Caption{widget: f, labels: bg}
 }
 
-func (c *Caption) setMessage(message string) {
+func (c *Caption) setMessage(input string) {
+	splitlen := 100
+	runes := []rune(input)
+	lastLineLen := len(runes) % splitlen
+	if lastLineLen == 0 {
+		lastLineLen = splitlen
+	}
+	lastLine := runes[len(runes)-lastLineLen:]
+
+	firstLine := []rune("")
+	if len(runes)-lastLineLen-splitlen >= 0 {
+		firstLine = runes[len(runes)-lastLineLen-splitlen : len(runes)-lastLineLen]
+	}
+
+	message := html.EscapeString(string(firstLine) + "\n" + string(lastLine))
 	format := `<b><span foreground="%s" size="xx-large" lang="ja">%s</span></b>`
-	c.bg[0].SetMarkup(fmt.Sprintf(format, "white", message))
+	c.labels[0].SetMarkup(fmt.Sprintf(format, "white", message))
 	bg := fmt.Sprintf(format, "black", message)
-	for _, b := range c.bg[1:] {
+	for _, b := range c.labels[1:] {
 		b.SetMarkup(bg)
 	}
 }
@@ -123,7 +133,6 @@ func main() {
 	progress := make(chan *amivoice.UEvent)
 
 	go c.CollectResult(final, progress, nil)
-
 	go c.Recognize(setting.GenerateRecognitionConfig(pr))
 
 	gtk.Init(nil)
@@ -153,7 +162,7 @@ func main() {
 	currentText := "Caption->"
 
 	cap := NewCaption()
-	tick := time.NewTicker(time.Second)
+	tick := time.NewTicker(300 * time.Millisecond)
 	go func() {
 		for {
 			select {
@@ -168,7 +177,7 @@ func main() {
 		}
 	}()
 
-	win.Add(cap.f)
+	win.Add(cap.widget)
 	sc := win.GetScreen()
 	v, err := sc.GetRGBAVisual()
 	win.SetVisual(v)
