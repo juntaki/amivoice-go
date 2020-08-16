@@ -157,7 +157,26 @@ func main() {
 		win.SetDecorated(false)
 		win.SetKeepAbove(true)
 		win.SetAppPaintable(true)
+		win.ResetStyle()
+		css, _ := gtk.CssProviderNew()
+		css.LoadFromData(`decoration
+{
+    border-radius: 6px 6px 0 0;
+    border-width: 0px;
+    /*box-shadow: 1px 12px 12px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.18);*/
+    box-shadow: none;
+    margin: 4px;
+}
 
+decoration:backdrop
+{
+    border-radius: 6px 6px 0 0;
+    border-width: 0px;
+    /*box-shadow: 1px 12px 12px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.18);*/
+    box-shadow: none;
+    margin: 4px;
+}`)
+		gtk.AddProviderForScreen(win.GetScreen(), css, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 		lastText := ""
 		finalText := ">"
 		currentText := ">"
