@@ -73,10 +73,7 @@ func (c *Caption) setMessage(input string) {
 	c.labels[0].SetMarkup(fmt.Sprintf(format, "white", message))
 	bg := fmt.Sprintf(format, "black", message)
 	for _, b := range c.labels[1:] {
-		_, err := glib.IdleAdd(b.SetMarkup, bg)
-		if err != nil {
-			log.Fatal("IdleAdd() failed:", err)
-		}
+		b.SetMarkup(bg)
 	}
 }
 
@@ -177,7 +174,7 @@ func main() {
 					currentText = finalText + val.Text
 				case <-tick.C:
 					if lastText != currentText {
-						cap.setMessage(currentText)
+						glib.IdleAdd(cap.setMessage, currentText)
 						lastText = currentText
 					}
 				}
