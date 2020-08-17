@@ -9,6 +9,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/juntaki/amivoice-go"
 	"github.com/juntaki/amivoice-go/cmd/lib"
+	"golang.org/x/xerrors"
 	"html"
 	"io"
 	"log"
@@ -55,17 +56,17 @@ func NewCaption() *Caption {
 }
 
 func (c *Caption) setMessage(input string) {
-	splitlen := 50
+	splitLen := 50
 	runes := []rune(input)
-	lastLineLen := len(runes) % splitlen
+	lastLineLen := len(runes) % splitLen
 	if lastLineLen == 0 {
-		lastLineLen = splitlen
+		lastLineLen = splitLen
 	}
 	lastLine := runes[len(runes)-lastLineLen:]
 
 	firstLine := []rune("")
-	if len(runes)-lastLineLen-splitlen >= 0 {
-		firstLine = runes[len(runes)-lastLineLen-splitlen : len(runes)-lastLineLen]
+	if len(runes)-lastLineLen-splitLen >= 0 {
+		firstLine = runes[len(runes)-lastLineLen-splitLen : len(runes)-lastLineLen]
 	}
 
 	message := html.EscapeString(string(firstLine) + "\n" + string(lastLine))
@@ -88,40 +89,41 @@ func main() {
 	application.Connect("activate", func() {
 		setting, err := lib.ReadSetting()
 		if err != nil {
-			panic(err)
+			log.Fatalf("fatal error: %+v\n", err)
 		}
 
 		pr, pw := io.Pipe()
 
 		// PortAudio input with buffer
-		portaudio.Initialize()
+		err = portaudio.Initialize()
+		if err != nil {
+			log.Fatalf("fatal error: %+v\n", err)
+		}
 		defer portaudio.Terminate()
-		in := make([]int16, 64)
+		in := make([]int16, 1024)
 		stream, err := portaudio.OpenDefaultStream(1, 0, 16000, len(in), in)
 		if err != nil {
-			panic(err)
+			log.Fatalf("fatal error: %+v\n", err)
 		}
 		defer stream.Close()
-		stream.Start()
+
+		err = stream.Start()
+		if err != nil {
+			log.Fatalf("fatal error: %+v\n", err)
+		}
 		go func() {
 			for {
-				for {
-					f, err := stream.AvailableToRead()
-					if err != nil {
-						pw.CloseWithError(err)
-					} else if f > 64 {
-						break
-					}
+				err = stream.Read()
+				if err != nil {
+					pw.CloseWithError(xerrors.Errorf("voice: %w", err))
 				}
-				stream.Read()
 				err = binary.Write(pw, binary.LittleEndian, in)
 				if err != nil {
-					pw.CloseWithError(err)
+					pw.CloseWithError(xerrors.Errorf("voice: %w", err))
 				}
 			}
 		}()
 
-		// Initialize amivoice
 		c, err := amivoice.NewConnection(setting.AppKey, setting.NoLog)
 		if err != nil {
 			return
@@ -131,8 +133,18 @@ func main() {
 		final := make(chan *amivoice.AEvent)
 		progress := make(chan *amivoice.UEvent)
 
-		go c.CollectResult(final, progress, nil)
-		go c.Recognize(setting.GenerateRecognitionConfig(pr))
+		go func() {
+			err = c.CollectResult(final, progress, nil)
+			if err != nil {
+				log.Fatalf("fatal error: %+v\n", err)
+			}
+		}()
+		go func() {
+			err = c.Recognize(setting.GenerateRecognitionConfig(pr))
+			if err != nil {
+				log.Fatalf("fatal error: %+v\n", err)
+			}
+		}()
 
 		// Create ApplicationWindow
 		win, err := gtk.ApplicationWindowNew(application)
@@ -158,30 +170,12 @@ func main() {
 		win.SetKeepAbove(true)
 		win.SetAppPaintable(true)
 		win.ResetStyle()
-		css, _ := gtk.CssProviderNew()
-		css.LoadFromData(`decoration
-{
-    border-radius: 6px 6px 0 0;
-    border-width: 0px;
-    /*box-shadow: 1px 12px 12px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.18);*/
-    box-shadow: none;
-    margin: 4px;
-}
 
-decoration:backdrop
-{
-    border-radius: 6px 6px 0 0;
-    border-width: 0px;
-    /*box-shadow: 1px 12px 12px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.18);*/
-    box-shadow: none;
-    margin: 4px;
-}`)
-		gtk.AddProviderForScreen(win.GetScreen(), css, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 		lastText := ""
 		finalText := ">"
 		currentText := ">"
 
-		cap := NewCaption()
+		caption := NewCaption()
 		tick := time.NewTicker(500 * time.Millisecond)
 		go func() {
 			for {
@@ -193,14 +187,17 @@ decoration:backdrop
 					currentText = finalText + val.Text
 				case <-tick.C:
 					if lastText != currentText {
-						glib.IdleAdd(cap.setMessage, currentText)
+						_, err = glib.IdleAdd(caption.setMessage, currentText)
+						if err != nil {
+							log.Fatalf("fatal error: %+v\n", err)
+						}
 						lastText = currentText
 					}
 				}
 			}
 		}()
 
-		win.Add(cap.widget)
+		win.Add(caption.widget)
 		sc := win.GetScreen()
 		v, err := sc.GetRGBAVisual()
 		win.SetVisual(v)
