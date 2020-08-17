@@ -124,25 +124,34 @@ func main() {
 			}
 		}()
 
-		c, err := amivoice.NewConnection(setting.AppKey, setting.NoLog)
-		if err != nil {
-			return
-		}
-		defer c.Close()
 
 		final := make(chan *amivoice.AEvent)
 		progress := make(chan *amivoice.UEvent)
 
 		go func() {
-			err = c.CollectResult(final, progress, nil)
-			if err != nil {
-				log.Fatalf("fatal error: %+v\n", err)
-			}
-		}()
-		go func() {
-			err = c.Recognize(setting.GenerateRecognitionConfig(pr))
-			if err != nil {
-				log.Fatalf("fatal error: %+v\n", err)
+			for {
+				retry := make(chan struct{})
+
+				c, err := amivoice.NewConnection(setting.AppKey, setting.NoLog)
+				if err != nil {
+					return
+				}
+				go func() {
+					err = c.CollectResult(final, progress, nil)
+					if err != nil {
+						log.Printf("retry: %+v\n", err)
+						retry <- struct{}{}
+					}
+				}()
+				go func() {
+					err = c.Recognize(setting.GenerateRecognitionConfig(pr))
+					if err != nil {
+						log.Printf("retry: %+v\n", err)
+						retry <- struct{}{}
+					}
+				}()
+				<-retry
+				c.Close()
 			}
 		}()
 

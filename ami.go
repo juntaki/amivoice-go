@@ -160,6 +160,9 @@ func (c *Conn) Recognize(i *RecognitionConfig) error {
 		return xerrors.Errorf("err: %w", err)
 	}
 	for {
+		if c.IsClosed {
+			return ErrConnClosed
+		}
 		w, err := c.Conn.NextWriter(websocket.BinaryMessage)
 		if err != nil {
 			return xerrors.Errorf("err: %w", err)
