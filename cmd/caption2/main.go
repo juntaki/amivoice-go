@@ -9,7 +9,6 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/juntaki/amivoice-go"
 	"github.com/juntaki/amivoice-go/cmd/lib"
-	"golang.org/x/xerrors"
 	"html"
 	"io"
 	"log"
@@ -114,12 +113,16 @@ func main() {
 		go func() {
 			for {
 				err = stream.Read()
-				if err != nil {
-					pw.CloseWithError(xerrors.Errorf("voice: %w", err))
+				if err != nil  {
+					if err == portaudio.InputOverflowed {
+						log.Println("Ignore input overflowed")
+					} else {
+						log.Fatalf("fatal: %+v\n", err)
+					}
 				}
 				err = binary.Write(pw, binary.LittleEndian, in)
 				if err != nil {
-					pw.CloseWithError(xerrors.Errorf("voice: %w", err))
+					log.Fatalf("fatal: %+v\n", err)
 				}
 			}
 		}()
