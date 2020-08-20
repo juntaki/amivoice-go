@@ -18,7 +18,7 @@ import (
 
 type Caption struct {
 	widget gtk.IWidget
-	labels []*gtk.Label
+	label  *gtk.Label
 }
 
 func NewCaption() *Caption {
@@ -27,31 +27,14 @@ func NewCaption() *Caption {
 		log.Fatal("Unable to create fixed:", err)
 	}
 
-	bg := make([]*gtk.Label, 9)
-	for i := range bg {
-		bg[i], err = gtk.LabelNew("")
-		if err != nil {
-			log.Fatal("Unable to create label:", err)
-		}
-		bg[i].SetXAlign(0)
-		bg[i].SetYAlign(0)
+	bg, err := gtk.LabelNew("")
+	if err != nil {
+		log.Fatal("Unable to create label:", err)
 	}
-	line := 2
-	m := [][]int{
-		{-1, 1},
-		{1, 1},
-		{1, -1},
-		{-1, -1},
-		{0, 1},
-		{0, -1},
-		{1, 0},
-		{-1, 0},
-	}
-	for i := range m {
-		f.Put(bg[i+1], m[i][0]*line, m[i][1]*line)
-	}
-	f.Put(bg[0], 0, 0)
-	return &Caption{widget: f, labels: bg}
+	bg.SetXAlign(0)
+	bg.SetYAlign(0)
+	f.Put(bg, 0, 0)
+	return &Caption{widget: f, label: bg}
 }
 
 func (c *Caption) setMessage(input string) {
@@ -69,12 +52,8 @@ func (c *Caption) setMessage(input string) {
 	}
 
 	message := html.EscapeString(string(firstLine) + "\n" + string(lastLine))
-	format := `<b><span foreground="%s" size="xx-large" lang="ja">%s</span></b>`
-	c.labels[0].SetMarkup(fmt.Sprintf(format, "white", message))
-	bg := fmt.Sprintf(format, "black", message)
-	for _, b := range c.labels[1:] {
-		b.SetMarkup(bg)
-	}
+	format := `<b><span background="%s" foreground="%s" size="xx-large" lang="ja">%s</span></b>`
+	c.label.SetMarkup(fmt.Sprintf(format, "black", "white", message))
 }
 
 func main() {
@@ -113,7 +92,7 @@ func main() {
 		go func() {
 			for {
 				err = stream.Read()
-				if err != nil  {
+				if err != nil {
 					if err == portaudio.InputOverflowed {
 						log.Println("Ignore input overflowed")
 					} else {
@@ -126,7 +105,6 @@ func main() {
 				}
 			}
 		}()
-
 
 		final := make(chan *amivoice.AEvent)
 		progress := make(chan *amivoice.UEvent)
