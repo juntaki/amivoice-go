@@ -93,7 +93,7 @@ func (c *Conn) CollectOneResult(fixedResult chan<- *AEvent, progressResult chan<
 				notification <- string(message)
 				log.Println(string(message))
 			}
-		}else {
+		} else {
 			return xerrors.New(string(message))
 		}
 	case 'U':
